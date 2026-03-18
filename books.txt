@@ -1,0 +1,3 @@
+Book title is: Naruto, Author is: Masashi Kishimoto, ISBN is: U82943143P, Genre: manga, Published in: 2001, Availability: false
+Book title is: Harry Potter, Author is: Filan Fisteku, ISBN is: I0573456P, Genre: Fantasy, Published in: 2001, Availability: true
+Book title is: One Piece, Author is: Eichiro Oda, ISBN is: P9924123I, Genre: manga, Published in: 1995, Availability: true

@@ -1,6 +1,8 @@
+
+
 public abstract class User {
     protected String userName;
-    protected String password;
+    protected String hashedPass;
     protected String email;
     protected String phoneNumber;
     protected String role;
@@ -10,20 +12,18 @@ public abstract class User {
     //Constructors---------
     public User(){}
 
-    public User(String userName, String password, String email, String phoneNumber){
+    public User(String userName, String hashedPass, String email, String phoneNumber){
         this.userName = userName;
-        this.password = password;
+        this.hashedPass = hashedPass;
         this.phoneNumber = phoneNumber;
         this.email = email;
     }
 
+
+
     //Getters------------
     public String getUserName(){
         return userName;
-    }
-
-    public String getPassword(){
-        return password;
     }
 
     public String getEmail(){
@@ -37,14 +37,15 @@ public abstract class User {
     public String getRole(){
         return role;
     }
+
+    public String getPasswordHash() {
+        return hashedPass;
+    }
     //Setters------------
     public void setUserName(String userName){
         this.userName = userName;
     }
 
-    public void setPassword(String password){
-        this.password = password;
-    }
 
     public void setEmail(String email){
         this.email = email;
@@ -57,6 +58,6 @@ public abstract class User {
 
     @Override
     public String toString(){
-        return "Username: " + userName + "," + " Password: " + password + "," + " Email: " + email + "," + " Phone Number: " + phoneNumber;
+        return "Username: " + userName + "," + " Password: " + hashedPass +  "," + " Email: " + email + "," + " Phone Number: " + phoneNumber;
     }
 }

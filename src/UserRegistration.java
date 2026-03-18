@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.UUID;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class UserRegistration {
     private boolean Passed;
@@ -41,7 +42,9 @@ public class UserRegistration {
             String customerID = UUID.randomUUID().toString();
             String membershipID = UUID.randomUUID().toString();
 
-            Customer customer = new Customer(userName, password, email, phoneNumber, customerID, membershipID, membershipType);
+            String hashedPass=BCrypt.hashpw(password, BCrypt.gensalt());
+
+            Customer customer = new Customer(userName, hashedPass, email, phoneNumber, customerID, membershipID, membershipType);
 
             try (BufferedWriter writer = new BufferedWriter(new FileWriter("customers.txt", true))) {
                 writer.write(customer.toString());
@@ -83,7 +86,9 @@ public class UserRegistration {
         } else {
             String adminId = UUID.randomUUID().toString();
 
-            Administrator admin = new Administrator(userName, password, email, phoneNumber, adminId);
+            String hashedPass=BCrypt.hashpw(password, BCrypt.gensalt());
+
+            Administrator admin = new Administrator(userName, hashedPass, email, phoneNumber, adminId);
 
             try (BufferedWriter br = new BufferedWriter(new FileWriter("admins.txt", true))) {
                 br.write(admin.toString());

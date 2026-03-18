@@ -16,8 +16,8 @@ public class Customer extends User{
 
     }
 
-    public Customer(String userName, String password, String email, String phoneNumber, String customerID, String MembershipID, String membershipType){
-        super(userName, password, email, phoneNumber);
+    public Customer(String userName, String hashedpass, String email, String phoneNumber, String customerID, String MembershipID, String membershipType){
+        super(userName, hashedpass, email, phoneNumber);
         this.customerID = customerID;
         this.MembershipID = MembershipID;
         this.membershipType = membershipType;
@@ -30,8 +30,8 @@ public class Customer extends User{
         }
     }
 
-    public Customer(String userName, String password, String email, String phoneNumber, String customerID, String MembershipID, String membershipType,String role){
-        super(userName, password, email, phoneNumber);
+    public Customer(String userName, String hashedpass, String email, String phoneNumber, String customerID, String MembershipID, String membershipType,String role){
+        super(userName, hashedpass, email, phoneNumber);
         this.customerID = customerID;
         this.MembershipID = MembershipID;
         this.membershipType = membershipType;

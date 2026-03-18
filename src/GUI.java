@@ -162,6 +162,13 @@ public class GUI extends Application {
                 return;
 
             }
+            if(regPass.getText().length()<8 || !regPass.getText().matches(".*[A-Z].*") || !regPass.getText().matches(".*[a-z].*")  || !regPass.getText().matches(".*[0-9].*") || !regPass.getText().matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*")){
+
+                showAlert("Error", "Password must be 8 characters long and contain at least an uppercase letter, lowercase letter, 1 special character and at least 1 number.");
+
+                return;
+            }
+
             if (!regEmail.getText().contains("@") || !regEmail.getText().contains(".")) {
 
                 showAlert("Error", "Invalid Email Address.");
@@ -177,9 +184,14 @@ public class GUI extends Application {
 
             if (regType.getValue().equals("Customer")) {
 
+
                 userReg.registerCustomer(regUser.getText(), regPass.getText(), regEmail.getText(), regPhone.getText(), "Standard");
 
                 showAlert("Success", "Customer registered! Please log in.");
+                regUser.clear();
+                regPass.clear();
+                regEmail.clear();
+                regPhone.clear();
             }
             else {
 
@@ -198,6 +210,10 @@ public class GUI extends Application {
                         userReg.registerAdmin(regUser.getText(), regPass.getText(), regEmail.getText(), regPhone.getText());
 
                         showAlert("Success", "Admin registered! Please log in.");
+                        regUser.clear();
+                        regPass.clear();
+                        regEmail.clear();
+                        regPhone.clear();
                     }
                     else {
 

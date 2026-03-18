@@ -1,3 +1,5 @@
+import org.mindrot.jbcrypt.BCrypt;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -27,7 +29,7 @@ public class LogIn {
 
 
 
-                if (CName.equals(userName) && CPass.equals(password)) {
+                if (CName.equals(userName) && BCrypt.checkpw(password, CPass)) {
                     found = true;
                     String CEmail = parts[2].split(":")[1].trim();
                     String CPnumber = parts[3].split(":")[1].trim();
@@ -69,7 +71,7 @@ public class LogIn {
                 String CName = parts[0].split(":")[1].trim();
                 String CPass = parts[1].split(":")[1].trim();
 
-                if(CName.equals(userName) && CPass.equals(password)){
+                if(CName.equals(userName) && BCrypt.checkpw(password, CPass)){
                     found = true;
                     String CEmail = parts[2].split(":")[1].trim();
                     String CAdminID = parts[3].split(":")[1].trim();

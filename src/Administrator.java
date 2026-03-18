@@ -72,14 +72,14 @@ public class Administrator extends User{
     public Administrator(){
     }
 
-    public Administrator(String userName, String password, String email, String phoneNumber, String adminID){
-        super(userName, password, email, phoneNumber);
+    public Administrator(String userName, String hashedPass, String email, String phoneNumber, String adminID){
+        super(userName, hashedPass, email, phoneNumber);
         this.adminID= adminID;
         this.role = "Administrator";
     }
 
-    public Administrator(String userName, String password, String email, String phoneNumber, String adminID, String role){
-        super(userName,password,email,phoneNumber);
+    public Administrator(String userName, String hashedPass, String email, String phoneNumber, String adminID, String role){
+        super(userName,hashedPass,email,phoneNumber);
         this.adminID = adminID;
         this.role = role;
     }
