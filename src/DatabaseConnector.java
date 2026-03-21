@@ -18,7 +18,6 @@ public class DatabaseConnector {
                 System.out.println("Failed to connect. Check your URL, username, or password.");
                 e.printStackTrace();
             }
-
             return connection;
         }
 }

@@ -1,6 +1,7 @@
 import javafx.application.Application;
 import java.io.File;
 import java.io.IOException;
+import java.sql.Connection;
 
 public class Main {
 
@@ -8,9 +9,13 @@ public class Main {
     public static User currentUser = null;
 
     public static void main(String[] args) {
-        initializeFiles();
 
+
+
+        initializeFiles();
         Application.launch(GUI.class, args);
+        Connection myConn = DatabaseConnector.getConnection();
+
     }
 
     private static void initializeFiles() {
