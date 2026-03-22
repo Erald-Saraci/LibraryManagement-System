@@ -6,7 +6,10 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -24,18 +27,7 @@ public class GUI extends Application {
     private Library library = new Library();
 
     public static void main(String[] args) {
-        createFilesIfMissing();
         launch(args);
-    }
-
-    private static void createFilesIfMissing() {
-        String[] files = {"customers.txt", "admins.txt", "books.txt", "borrowed.txt"};
-        for (String f : files) {
-
-            java.io.File file = new java.io.File(f);
-
-            try { file.createNewFile(); } catch (Exception e) {}
-        }
     }
 
     @Override
@@ -93,36 +85,33 @@ public class GUI extends Application {
         loginGrid.add(loginBtn, 1, 3);
 
         loginBtn.setOnAction(e -> {
-
             String u = loginUser.getText().trim();
-
             String p = loginPass.getText().trim();
 
             if (u.isEmpty() || p.isEmpty()) {
-
                 showAlert("Validation Error", "Username and Password cannot be empty.");
-
                 return;
             }
 
+            Connection conn = DatabaseConnector.getConnection();
+            if (conn == null) {
+                showAlert("Database Error", "Could not connect to MySQL.");
+                return;
+            }
+
+            boolean loginSuccess = false;
             if (roleBox.getValue().equals("Customer")) {
-
-                LogIn.LogInCustomer(u, p);
-            }
-            else {
-
-                LogIn.LogInAdmin(u, p);
-
+                loginSuccess = LogIn.LogInCustomer(conn, u, p);
+            } else {
+                loginSuccess = LogIn.LogInAdmin(conn, u, p);
             }
 
-            if (Main.currentUser != null) {
-
+            if (loginSuccess && Main.currentUser != null) {
+                loginUser.clear();
+                loginPass.clear();
                 showDashboardScene();
-            }
-            else {
-
-                showAlert("Login Failed", "Invalid credentials.");
-
+            } else {
+                showAlert("Login Failed", "Invalid username or password.");
             }
         });
 
@@ -288,6 +277,28 @@ public class GUI extends Application {
 
             buttons.getChildren().add(btnReturn);
         }
+        //Reserve Book Button
+        if (Main.currentUser instanceof Customer) {
+
+            Button btnReserve = new Button("Reserve Book");
+
+            btnReserve.setMaxWidth(Double.MAX_VALUE);
+
+            btnReserve.setOnAction(e -> showReserveDialog());
+
+            buttons.getChildren().add(btnReserve);
+        }
+        //My Reservations Button
+        if (Main.currentUser instanceof Customer) {
+
+            Button btnMyRes = new Button("My Reservations");
+
+            btnMyRes.setMaxWidth(Double.MAX_VALUE);
+
+            btnMyRes.setOnAction(e -> showMyReservations());
+
+            buttons.getChildren().add(btnMyRes);
+        }
         //Remove Book button
         if (Main.currentUser instanceof Administrator) {
 
@@ -316,7 +327,7 @@ public class GUI extends Application {
         btnSearch.setOnAction(e -> showSearchDialog());
 
         buttons.getChildren().add(btnSearch);
-        //Show all Bokks button
+        //Show all Books button
 
         Button btnShowAll = new Button("Show All Books");
 
@@ -563,6 +574,77 @@ public class GUI extends Application {
         });
     }
 
+    private void showReserveDialog() {
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+
+        dialog.setTitle("Reserve Book");
+
+        GridPane grid = createGrid();
+
+        TextField t1 = new TextField(); t1.setPromptText("Title");
+
+        TextField t2 = new TextField(); t2.setPromptText("Author");
+
+        grid.add(new Label("Title:"), 0, 0); grid.add(t1, 1, 0);
+
+        grid.add(new Label("Author:"), 0, 1); grid.add(t2, 1, 1);
+
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        dialog.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+
+                if (t1.getText().trim().isEmpty() || t2.getText().trim().isEmpty()) {
+
+                    System.out.println("Error: Title and Author are required.");
+
+                    return;
+                }
+                ((Customer)Main.currentUser).reserveBook(t1.getText().trim(), t2.getText().trim());
+            }
+        });
+    }
+
+    private void showMyReservations() {
+
+        String sql = "SELECT b.Title, b.Author, r.ReservedDate, r.Status, " +
+                "(SELECT COUNT(*) FROM reservations r2 " +
+                " WHERE r2.ISBN = r.ISBN AND r2.Status = 'Pending' " +
+                " AND r2.ReservedDate <= r.ReservedDate) AS QueuePosition " +
+                "FROM reservations r " +
+                "JOIN books b ON r.ISBN = b.ISBN " +
+                "WHERE r.CID = ? AND r.Status != 'Completed' " +
+                "ORDER BY r.ReservedDate ASC";
+
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, ((Customer) Main.currentUser).getCustomerID());
+            ResultSet rs = pstmt.executeQuery();
+
+            System.out.println("--- YOUR RESERVATIONS ---");
+            boolean found = false;
+            while (rs.next()) {
+                String status = rs.getString("Status");
+                int position = rs.getInt("QueuePosition");
+                System.out.println("Book:     " + rs.getString("Title") + " by " + rs.getString("Author"));
+                System.out.println("Reserved: " + rs.getString("ReservedDate"));
+                System.out.println("Status:   " + status +
+                        (status.equals("Pending") ? " (Queue position: " + position + ")" : " — You can borrow this now!"));
+                System.out.println("-----");
+                found = true;
+            }
+            if (!found) System.out.println("You have no active reservations.");
+            System.out.println("-------------------------");
+
+        } catch (SQLException e) {
+            System.out.println("Database error fetching reservations.");
+            e.printStackTrace();
+        }
+    }
+
     private void showRemoveDialog() {
 
         TextInputDialog td = new TextInputDialog();
@@ -581,9 +663,7 @@ public class GUI extends Application {
     }
 
     private void showSearchDialog() {
-
         TextInputDialog td = new TextInputDialog();
-
         td.setHeaderText("Enter Title to Search:");
 
         td.showAndWait().ifPresent(search -> {
@@ -591,23 +671,39 @@ public class GUI extends Application {
 
                 System.out.println("Search canceled: input was empty.");
 
-
                 return;
 
             }
-            System.out.println("--- SEARCH RESULTS ---");
-            try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.FileReader("books.txt"))) {
-                String line;
 
+            String sql = "SELECT Title, Author, Genre, ISBN, PublishYear, Availability " +
+                    "FROM books WHERE Title LIKE ?";
 
-                while ((line = reader.readLine()) != null) {
+            try (Connection conn = DatabaseConnector.getConnection();
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-                    if (line.toLowerCase().contains(search.toLowerCase())) System.out.println(line);
+                pstmt.setString(1, "%" + search + "%");
+                ResultSet rs = pstmt.executeQuery();
+
+                System.out.println("--- SEARCH RESULTS ---");
+                boolean found = false;
+                while (rs.next()) {
+                    System.out.println(new Book(
+                            rs.getString("Title"),
+                            rs.getString("Author"),
+                            rs.getString("Genre"),
+                            rs.getString("ISBN"),
+                            rs.getInt("PublishYear"),
+                            rs.getBoolean("Availability")
+                    ));
+                    found = true;
                 }
-            }
-            catch (IOException e) { System.out.println("Error reading file."); }
+                if (!found) System.out.println("No books found matching: " + search);
+                System.out.println("----------------------");
 
-            System.out.println("----------------------");
+            } catch (SQLException e) {
+                System.out.println("Database error during search.");
+                e.printStackTrace();
+            }
         });
     }
 
@@ -681,26 +777,33 @@ public class GUI extends Application {
                 System.out.println("Error: Username cannot be empty."); return;
 
             }
-            System.out.println("Searching for: " + u);
 
+            String sql = "SELECT u.Username, u.Email, u.PhoneNumber, u.Role " +
+                    "FROM user u WHERE u.Username LIKE ?";
 
-            searchFile("customers.txt", u);
+            try (Connection conn = DatabaseConnector.getConnection();
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            searchFile("admins.txt", u);
-        });
-    }
+                pstmt.setString(1, "%" + u + "%");
+                ResultSet rs = pstmt.executeQuery();
 
-    private void searchFile(String file, String user) {
-        try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.FileReader(file))) {
+                System.out.println("--- USER SEARCH RESULTS ---");
+                boolean found = false;
+                while (rs.next()) {
+                    System.out.println("Username: " + rs.getString("Username") +
+                            " | Email: " + rs.getString("Email") +
+                            " | Phone: " + rs.getString("PhoneNumber") +
+                            " | Role: " + rs.getString("Role"));
+                    found = true;
+                }
+                if (!found) System.out.println("No users found matching: " + u);
+                System.out.println("---------------------------");
 
-            String line;
-
-            while((line = br.readLine()) != null){
-
-                if(line.contains("Username: " + user)) System.out.println("Found: " + line);
-
+            } catch (SQLException e) {
+                System.out.println("Database error during user search.");
+                e.printStackTrace();
             }
-        } catch(Exception e){}
+        });
     }
 
     private void showExtendDialog() {

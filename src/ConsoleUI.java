@@ -1,8 +1,10 @@
-import java.io.*;
+import java.util.ArrayList;
 import java.time.LocalDate;
 import java.util.Scanner;
-import java.util.UUID;
-import java.util.ArrayList;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class ConsoleUI {
 
@@ -65,7 +67,7 @@ public class ConsoleUI {
                                     break;
                                 default: {
                                     System.out.println("Invalid input!");
-                                    memType="Standart";
+                                    memType="Standard";
                                 }
                             }
                             user.registerCustomer(customerName, customerPassword, customerEmail, customerPhoneNumber, memType);
@@ -109,21 +111,22 @@ public class ConsoleUI {
                     sc.nextLine();
 
                     if (logInChoice == 1) {
+                        Connection conn = DatabaseConnector.getConnection();
                         System.out.println("Enter UserName: ");
                         String userName = sc.nextLine();
                         System.out.println("Enter Password: ");
                         String password = sc.nextLine();
 
-                        LogIn.LogInCustomer(userName, password);
+                        LogIn.LogInCustomer(conn, userName, password);
 
                     } else if (logInChoice == 2) {
-
+                        Connection conn = DatabaseConnector.getConnection();
                         System.out.println("Enter UserName: ");
                         String userName = sc.nextLine();
                         System.out.println("Enter Password: ");
                         String password = sc.nextLine();
 
-                        LogIn.LogInAdmin(userName, password);
+                        LogIn.LogInAdmin(conn, userName, password);
                     } else {
                         System.out.println("Already logged in!");
                     }
@@ -145,6 +148,9 @@ public class ConsoleUI {
             System.out.println("10. Check Overdue Fines");
             System.out.println("11. Search users");
             System.out.println("12. Borrow time extend request");
+            System.out.println("13. Reserve Book");
+            System.out.println("14. My Reservations");
+            System.out.println("15. Generate Invoice");
             System.out.println("0. Exit");
 
             System.out.println("Enter your choice: ");
@@ -158,7 +164,10 @@ public class ConsoleUI {
 
 
                 case 1: {
-                    Administrator admin = (Administrator) Main.currentUser;
+                    if (!(Main.currentUser instanceof Administrator)) {
+                        System.out.println("Access Denied: Only Administrators can add books.");
+                        break;
+                    }
                     System.out.println("Enter Book Title: ");
                     String title = sc.nextLine();
 
@@ -173,6 +182,7 @@ public class ConsoleUI {
 
                     System.out.println("Enter Publication Year: ");
                     int year = sc.nextInt();
+                    sc.nextLine();
 
                     adminConstructor.addBook(title, author, genre, ISBN, year);
                     break;
@@ -180,7 +190,10 @@ public class ConsoleUI {
                 //  Borrow book -----------------
 
                 case 2: {
-
+                    if (!(Main.currentUser instanceof Customer)) {
+                        System.out.println("Access Denied: Only Customers can borrow books.");
+                        break;
+                    }
                     System.out.println("Enter Book title: ");
                     String bookTitle = sc.nextLine();
                     System.out.println("Enter Book Author: ");
@@ -197,6 +210,10 @@ public class ConsoleUI {
 
                 //Return Book------------------
                 case 3: {
+                    if (!(Main.currentUser instanceof Customer)) {
+                        System.out.println("Access Denied: Only Customers can return books.");
+                        break;
+                    }
                     System.out.println("Enter Book title: ");
                     String bookTitle = sc.nextLine();
                     System.out.println("Enter Book Author: ");
@@ -206,8 +223,12 @@ public class ConsoleUI {
 
                     break;
                 }
+
                 case 4: {
-                    Administrator admin = (Administrator) Main.currentUser;
+                    if (!(Main.currentUser instanceof Administrator)) {
+                        System.out.println("Access Denied: Only Administrators can remove books.");
+                        break;
+                    }
                     System.out.println("Enter Book title: ");
                     String bookTitle = sc.nextLine();
                     System.out.println("Enter Book Author: ");
@@ -221,6 +242,7 @@ public class ConsoleUI {
                     //LogOut-------------------
                     if (Main.currentUser != null) {
                         LogIn.LogOut();
+                        System.out.println("Logged out successfully.");
                     }
                     break;
                 }
@@ -286,20 +308,34 @@ public class ConsoleUI {
                     System.out.println("Enter the book title: ");
                     String search = sc.nextLine();
 
-                    try (BufferedReader reader = new BufferedReader(new FileReader("books.txt"))) {
-                        String line;
+                    String sql = "SELECT Title, Author, Genre, ISBN, PublishYear, Availability " +
+                            "FROM books WHERE Title LIKE ?";
 
-                        while ((line = reader.readLine()) != null) {
+                    try (Connection conn = DatabaseConnector.getConnection();
+                         PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
+                        pstmt.setString(1, "%" + search + "%");
+                        ResultSet rs = pstmt.executeQuery();
 
-                            String[] parts = line.split(",");
-                            if (parts[0].equalsIgnoreCase("Book title is: " + search)) {
-                                System.out.println(line);
-                            }
-
+                        System.out.println("--- SEARCH RESULTS ---");
+                        boolean found = false;
+                        while (rs.next()) {
+                            System.out.println(new Book(
+                                    rs.getString("Title"),
+                                    rs.getString("Author"),
+                                    rs.getString("Genre"),
+                                    rs.getString("ISBN"),
+                                    rs.getInt("PublishYear"),
+                                    rs.getBoolean("Availability")
+                            ));
+                            found = true;
                         }
-                    } catch (IOException e) {
-                        System.out.println("File not found: " + e.getMessage());
+                        if (!found) System.out.println("No books found matching: " + search);
+                        System.out.println("----------------------");
+
+                    } catch (SQLException e) {
+                        System.out.println("Database error during search.");
+                        e.printStackTrace();
                     }
                     break;
                 }
@@ -309,6 +345,10 @@ public class ConsoleUI {
                 }
 
                 case 9: {
+                    if (!(Main.currentUser instanceof Administrator)) {
+                        System.out.println("Access Denied: Only Administrators can update books.");
+                        break;
+                    }
                     int uChoice;
                     System.out.println("Enter book title: ");
                     String bookTitle = sc.nextLine();
@@ -321,12 +361,12 @@ public class ConsoleUI {
                     System.out.println("4.Update Book Publication Year");
                     System.out.println("5.Update Book Availability");
 
-                    uChoice=sc.nextInt();
+                    uChoice = sc.nextInt();
+                    sc.nextLine();
                     switch (uChoice) {
                         case 1: {
                             Administrator admin = (Administrator) Main.currentUser;
                             System.out.println("Enter new Book Title: ");
-                            sc.nextLine();
                             String newTitle = sc.nextLine();
                             admin.updateBookTitle(bookTitle, bookAuthor, newTitle);
                             break;
@@ -334,7 +374,6 @@ public class ConsoleUI {
                         case 2: {
                             Administrator admin = (Administrator) Main.currentUser;
                             System.out.println("Enter new Book Author: ");
-                            sc.nextLine();
                             String newAuthor = sc.nextLine();
                             admin.updateBookAuthor(bookTitle, bookAuthor, newAuthor);
                             break;
@@ -342,7 +381,6 @@ public class ConsoleUI {
                         case 3: {
                             Administrator admin = (Administrator) Main.currentUser;
                             System.out.println("Enter new Book Genre: ");
-                            sc.nextLine();
                             String newGenre = sc.nextLine();
                             admin.updateBookGenre(bookTitle, bookAuthor, newGenre);
                             break;
@@ -357,7 +395,7 @@ public class ConsoleUI {
                         }
                         case 5: {
                             Administrator admin = (Administrator) Main.currentUser;
-                            System.out.println("Enter new Book Availability: ");
+                            System.out.println("Enter new Book Availability (true/false): ");
                             boolean newAvailability = sc.nextBoolean();
                             sc.nextLine();
                             admin.updateBookAvailability(bookTitle, bookAuthor, newAvailability);
@@ -378,35 +416,37 @@ public class ConsoleUI {
                 }
 
                 case 11: {
-
+                    if (!(Main.currentUser instanceof Administrator)) {
+                        System.out.println("Access Denied: Only Administrators can search users.");
+                        break;
+                    }
                     System.out.println("Enter user name: ");
                     String keyword = sc.nextLine();
 
-                    try(BufferedReader br = new BufferedReader(new FileReader("customers.txt"))){
-                        String line;
+                    String sql = "SELECT u.Username, u.Email, u.PhoneNumber, u.Role " +
+                            "FROM user u WHERE u.Username LIKE ?";
 
-                        while((line = br.readLine()) != null){
-                            String[] parts = line.split(",");
+                    try (Connection conn = DatabaseConnector.getConnection();
+                         PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-                            if(parts[0].equalsIgnoreCase("Username: " + keyword)){
-                                System.out.println(line);
-                            }
+                        pstmt.setString(1, "%" + keyword + "%");
+                        ResultSet rs = pstmt.executeQuery();
+
+                        System.out.println("--- USER SEARCH RESULTS ---");
+                        boolean found = false;
+                        while (rs.next()) {
+                            System.out.println("Username: " + rs.getString("Username") +
+                                    " | Email: " + rs.getString("Email") +
+                                    " | Phone: " + rs.getString("PhoneNumber") +
+                                    " | Role: " + rs.getString("Role"));
+                            found = true;
                         }
-                    }catch(IOException e){
-                        System.out.println("File not found: " + e.getMessage());
-                    }
+                        if (!found) System.out.println("No users found matching: " + keyword);
+                        System.out.println("---------------------------");
 
-                    try(BufferedReader br = new BufferedReader(new FileReader("admins.txt"))){
-                        String line;
-
-                        while((line = br.readLine()) != null){
-                            String[] parts = line.split(",");
-                            if(parts[0].equalsIgnoreCase("Username: " + keyword)){
-                                System.out.println(line);
-                            }
-                        }
-                    }catch(IOException e){
-                        System.out.println("File not found: " + e.getMessage());
+                    } catch (SQLException e) {
+                        System.out.println("Database error during user search.");
+                        e.printStackTrace();
                     }
                     break;
                 }
@@ -424,6 +464,84 @@ public class ConsoleUI {
                     break;
                 }
 
+                //Reserve Book------------------
+
+                case 13: {
+                    if (!(Main.currentUser instanceof Customer)) {
+                        System.out.println("Access Denied: Only Customers can reserve books.");
+                        break;
+                    }
+                    System.out.println("Enter Book Title: ");
+                    String title = sc.nextLine();
+                    System.out.println("Enter Book Author: ");
+                    String author = sc.nextLine();
+                    ((Customer) Main.currentUser).reserveBook(title, author);
+                    break;
+                }
+
+                //My Reservations------------------
+
+                case 14: {
+                    if (!(Main.currentUser instanceof Customer)) {
+                        System.out.println("Access Denied: Only Customers can view reservations.");
+                        break;
+                    }
+                    String sql = "SELECT b.Title, b.Author, r.ReservedDate, r.Status, " +
+                            "(SELECT COUNT(*) FROM reservations r2 " +
+                            " WHERE r2.ISBN = r.ISBN AND r2.Status = 'Pending' " +
+                            " AND r2.ReservedDate <= r.ReservedDate) AS QueuePosition " +
+                            "FROM reservations r " +
+                            "JOIN books b ON r.ISBN = b.ISBN " +
+                            "WHERE r.CID = ? AND r.Status != 'Completed' " +
+                            "ORDER BY r.ReservedDate ASC";
+
+                    try (Connection conn = DatabaseConnector.getConnection();
+                         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                        pstmt.setString(1, ((Customer) Main.currentUser).getCustomerID());
+                        ResultSet rs = pstmt.executeQuery();
+
+                        System.out.println("--- YOUR RESERVATIONS ---");
+                        boolean found = false;
+                        while (rs.next()) {
+                            String status = rs.getString("Status");
+                            int position = rs.getInt("QueuePosition");
+                            System.out.println("Book:     " + rs.getString("Title") + " by " + rs.getString("Author"));
+                            System.out.println("Reserved: " + rs.getString("ReservedDate"));
+                            System.out.println("Status:   " + status +
+                                    (status.equals("Pending") ? " (Queue position: " + position + ")" : " — You can borrow this now!"));
+                            System.out.println("-----");
+                            found = true;
+                        }
+                        if (!found) System.out.println("You have no active reservations.");
+                        System.out.println("-------------------------");
+
+                    } catch (SQLException e) {
+                        System.out.println("Database error fetching reservations.");
+                        e.printStackTrace();
+                    }
+                    break;
+                }
+
+                //Generate Invoice------------------
+
+                case 15: {
+                    if (!(Main.currentUser instanceof Administrator)) {
+                        System.out.println("Access Denied: Only Administrators can generate invoices.");
+                        break;
+                    }
+                    System.out.println("Enter Customer Username: ");
+                    String customerName = sc.nextLine();
+                    System.out.println("Enter Amount: ");
+                    double amount = sc.nextDouble();
+                    sc.nextLine();
+                    if (amount <= 0) {
+                        System.out.println("Error: Amount must be positive.");
+                    } else {
+                        ((Administrator) Main.currentUser).generateInvoice(customerName, amount);
+                    }
+                    break;
+                }
 
                 case 0: {
                     System.out.println("Bye!");
@@ -435,31 +553,5 @@ public class ConsoleUI {
                     break;
             }
         }
-    }
-
-    private ArrayList<Book> loadBooksFromFile() {
-        ArrayList<Book> books = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader("books.txt"))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-
-                if (parts.length < 6) {
-                    continue;
-                }
-
-                String title = parts[0].trim();
-                String author = parts[1].trim();
-                String isbn = parts[2].trim();
-                String genre = parts[3].replace("Genre:", "").trim();
-                int year = Integer.parseInt(parts[4].replaceAll("[^0-9]", ""));
-                boolean isAvailable = parts[5].contains("true");
-
-                books.add(new Book(title, author, isbn, genre, year, isAvailable));
-            }
-        } catch (IOException e) {
-            System.out.println("Error reading library: " + e.getMessage());
-        }
-        return books;
     }
 }

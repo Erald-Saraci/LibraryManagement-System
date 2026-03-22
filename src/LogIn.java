@@ -1,8 +1,11 @@
 import org.mindrot.jbcrypt.BCrypt;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class LogIn {
 
@@ -10,85 +13,112 @@ public class LogIn {
 
     //LogIn method---------------
 
-    public static void LogInCustomer(String userName, String password) {
-        boolean found = false;
+    public static boolean LogInCustomer(Connection conn, String userName, String password) {
 
-        try (BufferedReader br = new BufferedReader(new FileReader("customers.txt"))) {
-            String line;
+        String sql = "SELECT u.Username, u.Password, u.Email, u.PhoneNumber, u.Role, " +
+                "c.CID, c.MembershipID, " +
+                "m.MembershipType " +
+                "FROM user u " +
+                "JOIN customer c ON u.ID = c.userID " +
+                "JOIN membership m ON c.MembershipID = m.MID " +
+                "WHERE u.Username = ?";
 
-            while ((line = br.readLine()) != null) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, userName);
+            ResultSet rs = pstmt.executeQuery();
 
-                if (line.trim().isEmpty() || !line.contains(",")) {
-                    continue;
+            if (rs.next()) {
+                String dbPasswordHash = rs.getString("Password");
+
+
+                if (BCrypt.checkpw(password, dbPasswordHash)) {
+
+
+                    String dbName = rs.getString("Username");
+                    String dbEmail = rs.getString("Email");
+                    String dbPhone = rs.getString("PhoneNumber");
+                    String dbRole = rs.getString("Role");
+                    String dbCID = rs.getString("CID");
+                    String dbMembershipID = rs.getString("MembershipID");
+                    String dbMembershipType = rs.getString("MembershipType");
+
+
+                    Main.currentUser = new Customer(
+                            dbName,
+                            dbPasswordHash,
+                            dbEmail,
+                            dbPhone,
+                            dbCID,
+                            dbMembershipID,
+                            dbMembershipType,
+                            dbRole
+                    );
+
+                    System.out.println("SUCCESS: Logged in! Welcome back: " + dbName);
+                    return true;
+
+                } else {
+                    System.out.println("LOGIN FAIL: Password does not match for user: " + userName);
+                    return false;
                 }
+            } else {
 
-                String[] parts = line.split(",");
-
-                String CName = parts[0].split(":")[1].trim();
-                String CPass = parts[1].split(":")[1].trim();
-
-
-
-                if (CName.equals(userName) && BCrypt.checkpw(password, CPass)) {
-                    found = true;
-                    String CEmail = parts[2].split(":")[1].trim();
-                    String CPnumber = parts[3].split(":")[1].trim();
-                    String CcustomerID = parts[4].split(":")[1].trim();
-                    String CMembershipID = parts[5].split(":")[1].trim();
-                    String CMembershiptType = parts[6].split(":")[1].trim();
-                    String CRole = parts[7].split(":")[1].trim();
-
-                    Main.currentUser = new Customer(CName, CPass, CEmail, CcustomerID, CPnumber, CMembershipID, CMembershiptType,CRole);
-
-                    String[] parts2 = parts[0].split(":");
-                    System.out.println("Logged in! Welcome back: " + parts2[1].trim());
-                    break;
-
-                }
-
+                System.out.println("LOGIN FAIL: Username not found or Account links (Customer/Membership) are missing.");
+                return false;
             }
-            if(!found){
-                System.out.println("Invalid username or password");
-            }
-        }catch (IOException e) {
-            System.out.println("File not found!");
+
+        } catch (SQLException e) {
+            System.out.println("DATABASE ERROR during login: " + e.getMessage());
+            e.printStackTrace();
+            return false;
         }
     }
 
-    public static void LogInAdmin(String userName, String password) {
-        boolean found = false;
-        try(BufferedReader br = new BufferedReader(new FileReader("admins.txt"))){
-            String line;
 
-            while((line = br.readLine()) != null){
 
-                if (line.trim().isEmpty() || !line.contains(",")) {
-                    continue;
+    public static boolean LogInAdmin(Connection conn,String userName, String password) {
+
+        String sql = "SELECT u.Username, u.Password, u.Email, u.PhoneNumber, u.Role, a.AID " +
+                "FROM user u " +
+                "JOIN admin a ON u.ID = a.userID " +
+                "WHERE u.Username = ?";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, userName);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                String dbPasswordHash = rs.getString("Password");
+
+                if (BCrypt.checkpw(password, dbPasswordHash)) {
+
+
+                    String dbName = rs.getString("Username");
+                    String dbEmail = rs.getString("Email");
+                    String dbPhone = rs.getString("PhoneNumber");
+                    String dbAdminID = rs.getString("AID");
+                    String dbRole = rs.getString("Role");
+
+
+                    Main.currentUser = new Administrator(dbName, dbPasswordHash, dbEmail, dbPhone, dbAdminID, dbRole);
+
+                    System.out.println("Logged in! Welcome back: " + dbName);
+                    return true;
+
+                } else {
+                    System.out.println("Invalid password.");
+                    return false;
                 }
-
-                String[] parts = line.split(",");
-
-                String CName = parts[0].split(":")[1].trim();
-                String CPass = parts[1].split(":")[1].trim();
-
-                if(CName.equals(userName) && BCrypt.checkpw(password, CPass)){
-                    found = true;
-                    String CEmail = parts[2].split(":")[1].trim();
-                    String CAdminID = parts[3].split(":")[1].trim();
-                    String CStatus = parts[4].split(":")[1].trim();
-                    Main.currentUser = new Administrator(CName, CPass, CEmail, CAdminID, CStatus);
-
-                    String[] parts2 = parts[0].split(":");
-                    System.out.println("Logged in! Welcome back: " + parts2[1].trim());
-                    break;
-                }
-
+            } else {
+                System.out.println("Invalid username.");
+                return false;
             }
-            if(!found) {
-                System.out.println("Invalid username or password");
-            }
-        }catch(IOException e){
-            System.out.println("File not found!");
+
+        } catch (SQLException e) {
+            System.out.println("Database error during login.");
+            e.printStackTrace();
+            return false;
         }
     }
 

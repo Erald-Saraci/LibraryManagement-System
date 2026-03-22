@@ -1,6 +1,11 @@
 import java.io.*;
 import java.util.UUID;
 import org.mindrot.jbcrypt.BCrypt;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 public class UserRegistration {
     private boolean Passed;
@@ -12,91 +17,116 @@ public class UserRegistration {
 
 
     public void registerCustomer(String userName, String password, String email, String phoneNumber, String membershipType){
-        boolean usernameTaken = false;
 
-        try(BufferedReader reader = new BufferedReader(new FileReader("customers.txt"))){
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.trim().isEmpty()) {
-                    continue;
-                }
+        String customerID = UUID.randomUUID().toString();
+        String membershipID = UUID.randomUUID().toString();
+        String hashedPass = BCrypt.hashpw(password, BCrypt.gensalt());
 
-                String[] parts = line.split(",");
 
-                if (parts.length > 0 && parts[0].contains(":")) {
-                    String fileUser = parts[0].split(":")[1].trim();
+        try (Connection conn = DatabaseConnector.getConnection()) {
 
-                    if (fileUser.equals(userName)) {
-                        usernameTaken = true;
-                        break;
-                    }
+            //Check for duplicate usernames
+
+            String checkSql = "SELECT COUNT(*) FROM user WHERE Username = ?";
+            try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+                checkStmt.setString(1, userName);
+                ResultSet rs = checkStmt.executeQuery();
+                if (rs.next() && rs.getInt(1) > 0) {
+                    System.out.println("Username already taken!\n");
+                    return;
                 }
             }
-        } catch(IOException e){
-            System.out.println("File not found (First user?): " + e.getMessage());
-        }
 
-        if(usernameTaken){
-            System.out.println("Username already taken!\n");
-        } else {
-            String customerID = UUID.randomUUID().toString();
-            String membershipID = UUID.randomUUID().toString();
 
-            String hashedPass=BCrypt.hashpw(password, BCrypt.gensalt());
+            String insertUserSql = "INSERT INTO user (Username, Password, Email, PhoneNumber, Role) VALUES (?, ?, ?, ?, 'CUSTOMER')";
+            int generatedUserId = -1;
 
-            Customer customer = new Customer(userName, hashedPass, email, phoneNumber, customerID, membershipID, membershipType);
+            try (PreparedStatement userStmt = conn.prepareStatement(insertUserSql, Statement.RETURN_GENERATED_KEYS)) {
+                userStmt.setString(1, userName);
+                userStmt.setString(2, hashedPass);
+                userStmt.setString(3, email);
+                userStmt.setString(4, phoneNumber);
+                userStmt.executeUpdate();
 
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter("customers.txt", true))) {
-                writer.write(customer.toString());
-                writer.newLine();
-                System.out.println(customer.toString() + "\n");
-            } catch (IOException e) {
-                System.out.println("File not found: " + e.getMessage());
+                ResultSet generatedKeys = userStmt.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    generatedUserId = generatedKeys.getInt(1);
+                }
             }
+
+
+            String insertMembershipSql = "INSERT INTO membership (MID, MembershipType, MembershipCost) VALUES (?, ?, ?)";
+            try (PreparedStatement memStmt = conn.prepareStatement(insertMembershipSql)) {
+                memStmt.setString(1, membershipID);
+                memStmt.setString(2, membershipType);
+                memStmt.setDouble(3, 0.00);
+                memStmt.executeUpdate();
+            }
+
+
+            String insertCustomerSql = "INSERT INTO customer (CID, userID, MembershipID) VALUES (?, ?, ?)";
+            try (PreparedStatement custStmt = conn.prepareStatement(insertCustomerSql)) {
+                custStmt.setString(1, customerID);
+                custStmt.setInt(2, generatedUserId);
+                custStmt.setString(3, membershipID);
+                custStmt.executeUpdate();
+            }
+
+            System.out.println("Customer successfully registered to the database!\n");
+
+        } catch (SQLException e) {
+            System.out.println("Database error during Customer registration: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
 
     public void registerAdmin(String userName, String password, String email, String phoneNumber){
-        boolean usernameTaken = false;
+        String adminId = UUID.randomUUID().toString();
+        String hashedPass = BCrypt.hashpw(password, BCrypt.gensalt());
 
+        try (Connection conn = DatabaseConnector.getConnection()) {
 
-        try(BufferedReader reader = new BufferedReader(new FileReader("admins.txt"))){
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.trim().isEmpty()) continue;
+            //Check for duplicate usernames
 
-                String[] parts = line.split(",");
-                if (parts.length > 0 && parts[0].contains(":")) {
-                    String fileUser = parts[0].split(":")[1].trim();
-
-                    if (fileUser.equals(userName)) {
-                        usernameTaken = true;
-                        break;
-                    }
+            String checkSql = "SELECT COUNT(*) FROM user WHERE Username = ?";
+            try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+                checkStmt.setString(1, userName);
+                ResultSet rs = checkStmt.executeQuery();
+                if (rs.next() && rs.getInt(1) > 0) {
+                    System.out.println("Admin Username already taken!\n");
+                    return;
                 }
             }
-        } catch(IOException e){
-            System.out.println("There is something wron with the file: " + e.getMessage());
-        }
 
+            String insertUserSql = "INSERT INTO user (Username, Password, Email, PhoneNumber, Role) VALUES (?, ?, ?, ?, 'ADMIN')";
+            int generatedUserId = -1;
 
-        if(usernameTaken){
-            System.out.println("Admin Username already taken!\n");
-        } else {
-            String adminId = UUID.randomUUID().toString();
+            try (PreparedStatement userStmt = conn.prepareStatement(insertUserSql, Statement.RETURN_GENERATED_KEYS)) {
+                userStmt.setString(1, userName);
+                userStmt.setString(2, hashedPass);
+                userStmt.setString(3, email);
+                userStmt.setString(4, phoneNumber);
+                userStmt.executeUpdate();
 
-            String hashedPass=BCrypt.hashpw(password, BCrypt.gensalt());
-
-            Administrator admin = new Administrator(userName, hashedPass, email, phoneNumber, adminId);
-
-            try (BufferedWriter br = new BufferedWriter(new FileWriter("admins.txt", true))) {
-                br.write(admin.toString());
-                br.newLine();
-                System.out.println(admin.toString() + "\n");
-            } catch (IOException e) {
-                System.out.println("File not found: " + e.getMessage());
+                ResultSet generatedKeys = userStmt.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    generatedUserId = generatedKeys.getInt(1);
+                }
             }
+
+            String insertAdminSql = "INSERT INTO Admin (AID, userID) VALUES (?, ?)";
+            try (PreparedStatement adminStmt = conn.prepareStatement(insertAdminSql)) {
+                adminStmt.setString(1, adminId);
+                adminStmt.setInt(2, generatedUserId);
+                adminStmt.executeUpdate();
+            }
+
+            System.out.println("Admin successfully registered to the database!\n");
+
+        } catch (SQLException e) {
+            System.out.println("Database error during Admin registration: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
