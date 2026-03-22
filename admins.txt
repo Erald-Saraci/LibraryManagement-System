@@ -1,3 +1,0 @@
-Username: Erald, Password: esaraci, Email: esaraci24@epoka.edu.al, Phone Number: 0675466413, Admin ID: 66c86d6e-c3ee-483c-b318-5b1b9df7d0c4, Status: Administrator
-Username: Oresti, Password: oresti123, Email: oresti24@gmail.com, Phone Number: 0688455138, Admin ID: 66fd5114-57db-4a18-bf68-6ebf373cdc0e, Status: Administrator
-Username: Claire, Password: claire123, Email: claire@gmail.com, Phone Number: 06887655, Admin ID: c597ee22-d279-4cef-9fd1-5140230a1cbc, Status: Administrator
