@@ -12,7 +12,7 @@ public class DatabaseConnector {
             Connection connection = null;
 
             try {
-                connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/library", "root", "ProSWEDev1.");
+                connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/library", "root", "Password");
                 System.out.println("Successfully connected to the database!");
             } catch (SQLException e) {
                 System.out.println("Failed to connect. Check your URL, username, or password.");
