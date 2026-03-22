@@ -6,7 +6,7 @@ public class DatabaseConnector {
 
         private static final String URL = "jdbc:mysql://localhost:3306/library";
         private static final String USER = "root";
-        private static final String PASSWORD = "ProSWEDev1.";
+        private static final String PASSWORD = "Password";
 
         public static Connection getConnection() {
             Connection connection = null;
