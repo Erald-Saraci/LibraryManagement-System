@@ -1,3 +1,5 @@
+import org.mindrot.jbcrypt.BCrypt;
+
 import java.util.ArrayList;
 import java.time.LocalDate;
 import java.sql.Connection;
@@ -337,6 +339,98 @@ public class Customer extends User {
         }
         return false;
     }
+
+    public void showMyBorrowedBooks() {
+        String sql = "SELECT b.Title, b.Author, br.BorrowDate, br.ReturnDate " +
+                "FROM borrowed br JOIN books b ON br.ISBN = b.ISBN " +
+                "WHERE br.CID = ?";
+
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, this.customerID);
+            ResultSet rs = pstmt.executeQuery();
+
+            System.out.println("--- YOUR BORROWED BOOKS ---");
+            boolean found = false;
+            while (rs.next()) {
+                System.out.println("Title:       " + rs.getString("Title"));
+                System.out.println("Author:      " + rs.getString("Author"));
+                System.out.println("Borrow Date: " + rs.getString("BorrowDate"));
+                System.out.println("Due Date:    " + rs.getString("ReturnDate"));
+                System.out.println("-----");
+                found = true;
+            }
+            if (!found) System.out.println("You have no books currently borrowed.");
+            System.out.println("---------------------------");
+
+        } catch (SQLException e) {
+            System.out.println("Database error fetching borrowed books.");
+            e.printStackTrace();
+        }
+    }
+
+    public void cancelReservation(String title) {
+        String sql = "UPDATE reservations r JOIN books b ON r.ISBN = b.ISBN " +
+                "SET r.Status = 'Cancelled' " +
+                "WHERE b.Title = ? AND r.CID = ? AND r.Status = 'Pending'";
+
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, title);
+            pstmt.setString(2, this.customerID);
+            int rows = pstmt.executeUpdate();
+
+            if (rows > 0) {
+                System.out.println("Reservation for '" + title + "' cancelled successfully.");
+            } else {
+                System.out.println("No active reservation found for '" + title + "'.");
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Database error cancelling reservation.");
+            e.printStackTrace();
+        }
+    }
+
+    public void changePassword(String oldPassword, String newPassword) {
+        String sql = "SELECT Password FROM user u JOIN customer c ON u.ID = c.userID WHERE c.CID = ?";
+
+        try (Connection conn = DatabaseConnector.getConnection()) {
+
+            // Verify old password first
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, this.customerID);
+                ResultSet rs = pstmt.executeQuery();
+
+                if (rs.next()) {
+                    String currentHash = rs.getString("Password");
+
+                    if (!BCrypt.checkpw(oldPassword, currentHash)) {
+                        System.out.println("Error: Old password is incorrect.");
+                        return;
+                    }
+                }
+            }
+
+            String updateSql = "UPDATE user u JOIN customer c ON u.ID = c.userID " +
+                    "SET u.Password = ? WHERE c.CID = ?";
+            try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+                String newHash = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+                updateStmt.setString(1, newHash);
+                updateStmt.setString(2, this.customerID);
+                updateStmt.executeUpdate();
+                this.hashedPass = newHash;
+                System.out.println("Password changed successfully!");
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Database error changing password.");
+            e.printStackTrace();
+        }
+    }
+
 
     @Override
     public String toString() {

@@ -254,6 +254,38 @@ public class Administrator extends User {
         }
     }
 
+    public void showAllBorrowedBooks() {
+        String sql = "SELECT u.Username, b.Title, b.Author, br.BorrowDate, br.ReturnDate " +
+                "FROM borrowed br " +
+                "JOIN customer c ON br.CID = c.CID " +
+                "JOIN user u ON c.userID = u.ID " +
+                "JOIN books b ON br.ISBN = b.ISBN " +
+                "ORDER BY br.ReturnDate ASC";
+
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            System.out.println("--- ALL BORROWED BOOKS ---");
+            boolean found = false;
+            while (rs.next()) {
+                System.out.println("Customer:    " + rs.getString("Username"));
+                System.out.println("Title:       " + rs.getString("Title"));
+                System.out.println("Author:      " + rs.getString("Author"));
+                System.out.println("Borrow Date: " + rs.getString("BorrowDate"));
+                System.out.println("Due Date:    " + rs.getString("ReturnDate"));
+                System.out.println("-----");
+                found = true;
+            }
+            if (!found) System.out.println("No books are currently borrowed.");
+            System.out.println("--------------------------");
+
+        } catch (SQLException e) {
+            System.out.println("Database error fetching borrowed books.");
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public String toString() {
         return super.toString() + ", Admin ID: " + adminID + ", Status: " + role;

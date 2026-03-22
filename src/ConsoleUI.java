@@ -23,7 +23,12 @@ public class ConsoleUI {
         int choice1;
 
         while(Main.currentUser == null) {
-            choice1=sc.nextInt();
+            try {
+                choice1 = Integer.parseInt(sc.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a number.");
+                continue;
+            }
             switch (choice1) {
                 case 1: {
                     System.out.println("1. Register as a customer");
@@ -55,8 +60,13 @@ public class ConsoleUI {
                             System.out.println("Chose Membership Type: ");
                             System.out.println("1. Standard");
                             System.out.println("2. Premium");
-                            int memChoice = sc.nextInt();
-                            sc.nextLine();
+                            int memChoice;
+                            try {
+                                memChoice = Integer.parseInt(sc.nextLine());
+                            } catch (NumberFormatException e) {
+                                System.out.println("Invalid input. Please enter a number.");
+                                break;
+                            }
 
                             switch (memChoice){
                                 case 1:
@@ -107,8 +117,13 @@ public class ConsoleUI {
                     System.out.println("1.Log In as customer");
                     System.out.println("2.Log In as administrator");
                     System.out.println("Enter your choice: ");
-                    int logInChoice = sc.nextInt();
-                    sc.nextLine();
+                    int logInChoice;
+                    try {
+                        logInChoice = Integer.parseInt(sc.nextLine());
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid input. Please enter a number.");
+                        break;
+                    }
 
                     if (logInChoice == 1) {
                         Connection conn = DatabaseConnector.getConnection();
@@ -151,11 +166,20 @@ public class ConsoleUI {
             System.out.println("13. Reserve Book");
             System.out.println("14. My Reservations");
             System.out.println("15. Generate Invoice");
+            System.out.println("16. Cancel Reservation");
+            System.out.println("17. My Borrowed Books");
+            System.out.println("18. All Borrowed Books");
+            System.out.println("19. Change Password");
             System.out.println("0. Exit");
 
             System.out.println("Enter your choice: ");
-            int choice = sc.nextInt();
-            sc.nextLine();
+            int choice;
+            try {
+                choice = Integer.parseInt(sc.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a number.");
+                continue;
+            }
 
             switch (choice) {
 
@@ -199,8 +223,13 @@ public class ConsoleUI {
                     System.out.println("Enter Book Author: ");
                     String bookAuthor = sc.nextLine();
                     System.out.println("Enter the amount of days you want to borrow the book: ");
-                    int nrOfDays = sc.nextInt();
-                    sc.nextLine();
+                    int nrOfDays;
+                    try {
+                        nrOfDays = Integer.parseInt(sc.nextLine());
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid input. Please enter a number.");
+                        break;
+                    }
                     LocalDate borrowDate = LocalDate.now();
                     Customer customer = (Customer) Main.currentUser;
                     customer.borrowBook(bookTitle, bookAuthor, borrowDate, nrOfDays);
@@ -257,8 +286,13 @@ public class ConsoleUI {
                     System.out.println("3. Filter by available");
 
                     if (sc.hasNextInt()) {
-                        int filter = sc.nextInt();
-                        sc.nextLine();
+                        int filter;
+                        try {
+                            filter = Integer.parseInt(sc.nextLine());
+                        } catch (NumberFormatException e) {
+                            System.out.println("Invalid input. Please enter a number.");
+                            break;
+                        }
 
                         ArrayList<Book> results = new ArrayList<>();
 
@@ -361,8 +395,12 @@ public class ConsoleUI {
                     System.out.println("4.Update Book Publication Year");
                     System.out.println("5.Update Book Availability");
 
-                    uChoice = sc.nextInt();
-                    sc.nextLine();
+                    try {
+                        uChoice = Integer.parseInt(sc.nextLine());
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid input. Please enter a number.");
+                        break;
+                    }
                     switch (uChoice) {
                         case 1: {
                             Administrator admin = (Administrator) Main.currentUser;
@@ -540,6 +578,60 @@ public class ConsoleUI {
                     } else {
                         ((Administrator) Main.currentUser).generateInvoice(customerName, amount);
                     }
+                    break;
+                }
+
+                //Cancel Reservation------------------
+                case 16: {
+                    if (!(Main.currentUser instanceof Customer)) {
+                        System.out.println("Access Denied: Only Customers can cancel reservations.");
+                        break;
+                    }
+                    System.out.println("Enter Book Title to Cancel Reservation: ");
+                    String title = sc.nextLine();
+                    ((Customer) Main.currentUser).cancelReservation(title);
+                    break;
+                }
+
+//My Borrowed Books------------------
+                case 17: {
+                    if (!(Main.currentUser instanceof Customer)) {
+                        System.out.println("Access Denied: Only Customers can view their borrowed books.");
+                        break;
+                    }
+                    ((Customer) Main.currentUser).showMyBorrowedBooks();
+                    break;
+                }
+
+//All Borrowed Books------------------
+                case 18: {
+                    if (!(Main.currentUser instanceof Administrator)) {
+                        System.out.println("Access Denied: Only Administrators can view all borrowed books.");
+                        break;
+                    }
+                    adminConstructor.showAllBorrowedBooks();
+                    break;
+                }
+
+//Change Password------------------
+                case 19: {
+                    if (!(Main.currentUser instanceof Customer)) {
+                        System.out.println("Access Denied: Only Customers can change their password.");
+                        break;
+                    }
+                    System.out.println("Enter Old Password: ");
+                    String oldPassword = sc.nextLine();
+                    System.out.println("Enter New Password: ");
+                    String newPassword = sc.nextLine();
+                    if (newPassword.length() < 8 ||
+                            !newPassword.matches(".*[A-Z].*") ||
+                            !newPassword.matches(".*[a-z].*") ||
+                            !newPassword.matches(".*[0-9].*") ||
+                            !newPassword.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*")) {
+                        System.out.println("Error: Password must be 8+ characters with uppercase, lowercase, number and special character.");
+                        break;
+                    }
+                    ((Customer) Main.currentUser).changePassword(oldPassword, newPassword);
                     break;
                 }
 

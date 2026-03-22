@@ -299,6 +299,39 @@ public class GUI extends Application {
 
             buttons.getChildren().add(btnMyRes);
         }
+        //Cancel Reservation Button
+        if (Main.currentUser instanceof Customer) {
+
+            Button btnCancelRes = new Button("Cancel Reservation");
+
+            btnCancelRes.setMaxWidth(Double.MAX_VALUE);
+
+            btnCancelRes.setOnAction(e -> showCancelReservationDialog());
+
+            buttons.getChildren().add(btnCancelRes);
+        }
+//My Borrowed Books Button
+        if (Main.currentUser instanceof Customer) {
+
+            Button btnMyBooks = new Button("My Borrowed Books");
+
+            btnMyBooks.setMaxWidth(Double.MAX_VALUE);
+
+            btnMyBooks.setOnAction(e -> ((Customer) Main.currentUser).showMyBorrowedBooks());
+
+            buttons.getChildren().add(btnMyBooks);
+        }
+//Change Password Button
+        if (Main.currentUser instanceof Customer) {
+
+            Button btnChangePass = new Button("Change Password");
+
+            btnChangePass.setMaxWidth(Double.MAX_VALUE);
+
+            btnChangePass.setOnAction(e -> showChangePasswordDialog());
+
+            buttons.getChildren().add(btnChangePass);
+        }
         //Remove Book button
         if (Main.currentUser instanceof Administrator) {
 
@@ -366,6 +399,17 @@ public class GUI extends Application {
             btnFines.setOnAction(e -> adminTools.calculateOverdueFines());
 
             buttons.getChildren().add(btnFines);
+        }
+        //Show All Borrowed Books Button
+        if (Main.currentUser instanceof Administrator) {
+
+            Button btnAllBorrowed = new Button("All Borrowed Books");
+
+            btnAllBorrowed.setMaxWidth(Double.MAX_VALUE);
+
+            btnAllBorrowed.setOnAction(e -> adminTools.showAllBorrowedBooks());
+
+            buttons.getChildren().add(btnAllBorrowed);
         }
         //Search Users button
         if (Main.currentUser instanceof Administrator) {
@@ -643,6 +687,77 @@ public class GUI extends Application {
             System.out.println("Database error fetching reservations.");
             e.printStackTrace();
         }
+    }
+
+    private void showCancelReservationDialog() {
+
+        TextInputDialog td = new TextInputDialog();
+
+        td.setHeaderText("Enter Book Title to Cancel Reservation:");
+
+        td.showAndWait().ifPresent(title -> {
+
+            if (title.trim().isEmpty()) {
+
+                System.out.println("Error: Title cannot be empty.");
+
+                return;
+            }
+            ((Customer) Main.currentUser).cancelReservation(title);
+        });
+    }
+
+    private void showChangePasswordDialog() {
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+
+        dialog.setTitle("Change Password");
+
+        GridPane grid = createGrid();
+
+        PasswordField oldPass = new PasswordField(); oldPass.setPromptText("Old Password");
+
+        PasswordField newPass = new PasswordField(); newPass.setPromptText("New Password");
+
+        PasswordField confirmPass = new PasswordField(); confirmPass.setPromptText("Confirm New Password");
+
+        grid.add(new Label("Old Password:"),     0, 0); grid.add(oldPass,     1, 0);
+
+        grid.add(new Label("New Password:"),     0, 1); grid.add(newPass,     1, 1);
+
+        grid.add(new Label("Confirm Password:"), 0, 2); grid.add(confirmPass, 1, 2);
+
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        dialog.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+
+                if (oldPass.getText().isEmpty() || newPass.getText().isEmpty() || confirmPass.getText().isEmpty()) {
+
+                    System.out.println("Error: All fields are required.");
+
+                    return;
+                }
+                if (!newPass.getText().equals(confirmPass.getText())) {
+
+                    System.out.println("Error: New passwords do not match.");
+
+                    return;
+                }
+                if (newPass.getText().length() < 8 ||
+                        !newPass.getText().matches(".*[A-Z].*") ||
+                        !newPass.getText().matches(".*[a-z].*") ||
+                        !newPass.getText().matches(".*[0-9].*") ||
+                        !newPass.getText().matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*")) {
+
+                    System.out.println("Error: Password must be 8+ characters with uppercase, lowercase, number and special character.");
+
+                    return;
+                }
+                ((Customer) Main.currentUser).changePassword(oldPass.getText(), newPass.getText());
+            }
+        });
     }
 
     private void showRemoveDialog() {
