@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public class Administrator extends User {
     private String adminID;
-    private String adminPass = "admin123";
+    private String adminPass = System.getenv("ADMIN_MASTER_PASSWORD");
 
     public Administrator() {}
 
