@@ -81,52 +81,72 @@ public class UserRegistration {
     }
 
 
-    public void registerAdmin(String userName, String password, String email, String phoneNumber){
+    public boolean registerAdmin(String userName, String password, String email, String phoneNumber) {
         String adminId = UUID.randomUUID().toString();
         String hashedPass = BCrypt.hashpw(password, BCrypt.gensalt());
 
         try (Connection conn = DatabaseConnector.getConnection()) {
 
-            //Check for duplicate usernames
+            if (conn == null) {
+                System.out.println("Admin registration failed: no database connection.");
+                return false;
+            }
 
+            // Check for duplicate usernames
             String checkSql = "SELECT COUNT(*) FROM user WHERE Username = ?";
             try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
                 checkStmt.setString(1, userName);
                 ResultSet rs = checkStmt.executeQuery();
                 if (rs.next() && rs.getInt(1) > 0) {
                     System.out.println("Admin Username already taken!\n");
-                    return;
+                    return false;
                 }
             }
 
-            String insertUserSql = "INSERT INTO user (Username, Password, Email, PhoneNumber, Role) VALUES (?, ?, ?, ?, 'ADMIN')";
-            int generatedUserId = -1;
+            conn.setAutoCommit(false);
 
-            try (PreparedStatement userStmt = conn.prepareStatement(insertUserSql, Statement.RETURN_GENERATED_KEYS)) {
-                userStmt.setString(1, userName);
-                userStmt.setString(2, hashedPass);
-                userStmt.setString(3, email);
-                userStmt.setString(4, phoneNumber);
-                userStmt.executeUpdate();
+            try {
+                String insertUserSql = "INSERT INTO user (Username, Password, Email, PhoneNumber, Role) VALUES (?, ?, ?, ?, 'ADMIN')";
+                int generatedUserId = -1;
 
-                ResultSet generatedKeys = userStmt.getGeneratedKeys();
-                if (generatedKeys.next()) {
-                    generatedUserId = generatedKeys.getInt(1);
+                try (PreparedStatement userStmt = conn.prepareStatement(insertUserSql, Statement.RETURN_GENERATED_KEYS)) {
+                    userStmt.setString(1, userName);
+                    userStmt.setString(2, hashedPass);
+                    userStmt.setString(3, email);
+                    userStmt.setString(4, phoneNumber);
+                    userStmt.executeUpdate();
+
+                    ResultSet generatedKeys = userStmt.getGeneratedKeys();
+                    if (generatedKeys.next()) {
+                        generatedUserId = generatedKeys.getInt(1);
+                    }
                 }
-            }
 
-            String insertAdminSql = "INSERT INTO Admin (AID, userID) VALUES (?, ?)";
-            try (PreparedStatement adminStmt = conn.prepareStatement(insertAdminSql)) {
-                adminStmt.setString(1, adminId);
-                adminStmt.setInt(2, generatedUserId);
-                adminStmt.executeUpdate();
-            }
+                String insertAdminSql = "INSERT INTO admin (AID, userID, MasterPassword) VALUES (?, ?, ?)";
+                try (PreparedStatement adminStmt = conn.prepareStatement(insertAdminSql)) {
+                    adminStmt.setString(1, adminId);
+                    adminStmt.setInt(2, generatedUserId);
+                    adminStmt.setString(3, BCrypt.hashpw(System.getenv("ADMIN_MASTER_PASSWORD"), BCrypt.gensalt()));
+                    adminStmt.executeUpdate();
+                }
 
-            System.out.println("Admin successfully registered to the database!\n");
+                conn.commit();
+                System.out.println("Admin successfully registered to the database!\n");
+                return true;
+
+            } catch (SQLException e) {
+                conn.rollback();
+                System.out.println("Admin registration rolled back: " + e.getMessage());
+                e.printStackTrace();
+                return false;
+            } finally {
+                conn.setAutoCommit(true);
+            }
 
         } catch (SQLException e) {
             System.out.println("Database error during Admin registration: " + e.getMessage());
             e.printStackTrace();
+            return false;
         }
     }
 

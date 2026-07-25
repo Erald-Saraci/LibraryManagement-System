@@ -196,13 +196,16 @@ public class GUI extends Application {
 
                     if (userReg.getPassed()) {
 
-                        userReg.registerAdmin(regUser.getText(), regPass.getText(), regEmail.getText(), regPhone.getText());
+                        if (userReg.registerAdmin(regUser.getText(), regPass.getText(), regEmail.getText(), regPhone.getText())) {
+                            showAlert("Success", "Admin registered! Please log in.");
+                            regUser.clear();
+                            regPass.clear();
+                            regEmail.clear();
+                            regPhone.clear();
+                        } else {
+                            showAlert("Error", "Admin registration failed. Check the console for details.");
+                        }
 
-                        showAlert("Success", "Admin registered! Please log in.");
-                        regUser.clear();
-                        regPass.clear();
-                        regEmail.clear();
-                        regPhone.clear();
                     }
                     else {
 
