@@ -236,7 +236,7 @@ CREATE TABLE `user` (
   `Email` varchar(50) NOT NULL,
   `PhoneNumber` varchar(30) NOT NULL,
   `Role` varchar(50) NOT NULL,
-  `CreateAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `CreatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`ID`),
   UNIQUE KEY `Username` (`Username`),
   UNIQUE KEY `Email` (`Email`)
