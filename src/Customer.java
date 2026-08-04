@@ -1,6 +1,5 @@
 import org.mindrot.jbcrypt.BCrypt;
 
-import java.util.ArrayList;
 import java.time.LocalDate;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -16,16 +15,6 @@ public class Customer extends User {
     private int maxBooks;
 
     //Constructors--------------
-    public Customer() {}
-
-    public Customer(String userName, String hashedpass, String email, String phoneNumber, String customerID, String MembershipID, String membershipType) {
-        super(userName, hashedpass, email, phoneNumber);
-        this.customerID = customerID;
-        this.MembershipID = MembershipID;
-        this.membershipType = membershipType;
-        this.role = "Customer";
-        this.maxBooks = membershipType.equalsIgnoreCase("Premium") ? 5 : 2;
-    }
 
     public Customer(String userName, String hashedpass, String email, String phoneNumber, String customerID, String MembershipID, String membershipType, String role) {
         super(userName, hashedpass, email, phoneNumber);

@@ -1,6 +1,3 @@
-import java.util.ArrayList;
-
-
 public class Book{
     private String title;
     private String author;
@@ -10,9 +7,6 @@ public class Book{
     private boolean available;
 
     //Constructors--------------
-    public Book(){ //No-arg constructor
-
-    }
 
     public Book(String title, String author, String genre, String ISBN, int publicationYear, boolean available){ //Constructor for adding
         this.title = title;

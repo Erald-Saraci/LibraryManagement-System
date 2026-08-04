@@ -1,4 +1,3 @@
-import java.util.ArrayList;
 import java.time.LocalDate;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,12 +12,6 @@ public class Administrator extends User {
 
     public Administrator() {}
 
-    public Administrator(String userName, String hashedPass, String email, String phoneNumber, String adminID) {
-        super(userName, hashedPass, email, phoneNumber);
-        this.adminID = adminID;
-        this.role = "Administrator";
-    }
-
     public Administrator(String userName, String hashedPass, String email, String phoneNumber, String adminID, String role) {
         super(userName, hashedPass, email, phoneNumber);
         this.adminID = adminID;
@@ -27,10 +20,7 @@ public class Administrator extends User {
 
     // Getters & Setters
     public String getAdminID() { return adminID; }
-    public String getUserName() { return userName; }
     public String getAdminPass() { return adminPass; }
-    public void setAdminID(String adminID) { this.adminID = adminID; }
-    public void setAdminPass(String password) { this.adminPass = password; }
 
     //book methods
 
