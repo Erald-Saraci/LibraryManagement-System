@@ -2,9 +2,9 @@ CREATE DATABASE  IF NOT EXISTS `library` /*!40100 DEFAULT CHARACTER SET utf8mb4 
 USE `library`;
 -- MySQL dump 10.13  Distrib 8.0.44, for Win64 (x86_64)
 --
--- Host: 127.0.0.1    Database: library
+-- Host: library-db.c7c6emwos2zq.eu-north-1.rds.amazonaws.com    Database: library
 -- ------------------------------------------------------
--- Server version	8.0.44
+-- Server version	8.0.45
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -16,6 +16,14 @@ USE `library`;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+SET @MYSQLDUMP_TEMP_LOG_BIN = @@SESSION.SQL_LOG_BIN;
+SET @@SESSION.SQL_LOG_BIN= 0;
+
+--
+-- GTID state at the beginning of the backup 
+--
+
+SET @@GLOBAL.GTID_PURGED=/*!80000 '+'*/ '';
 
 --
 -- Table structure for table `admin`
@@ -27,22 +35,12 @@ DROP TABLE IF EXISTS `admin`;
 CREATE TABLE `admin` (
   `AID` varchar(60) NOT NULL,
   `userID` int NOT NULL,
-  `MasterPassword` varchar(60) NOT NULL,
   PRIMARY KEY (`AID`),
   UNIQUE KEY `AID` (`AID`),
   KEY `userID` (`userID`),
   CONSTRAINT `admin_ibfk_1` FOREIGN KEY (`userID`) REFERENCES `user` (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `admin`
---
-
-LOCK TABLES `admin` WRITE;
-/*!40000 ALTER TABLE `admin` DISABLE KEYS */;
-/*!40000 ALTER TABLE `admin` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `books`
@@ -62,15 +60,6 @@ CREATE TABLE `books` (
   UNIQUE KEY `ISBN` (`ISBN`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `books`
---
-
-LOCK TABLES `books` WRITE;
-/*!40000 ALTER TABLE `books` DISABLE KEYS */;
-/*!40000 ALTER TABLE `books` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `borrowed`
@@ -95,15 +84,6 @@ CREATE TABLE `borrowed` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `borrowed`
---
-
-LOCK TABLES `borrowed` WRITE;
-/*!40000 ALTER TABLE `borrowed` DISABLE KEYS */;
-/*!40000 ALTER TABLE `borrowed` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `customer`
 --
 
@@ -124,16 +104,6 @@ CREATE TABLE `customer` (
   CONSTRAINT `customer_ibfk_2` FOREIGN KEY (`MembershipID`) REFERENCES `membership` (`MID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `customer`
---
-
-LOCK TABLES `customer` WRITE;
-/*!40000 ALTER TABLE `customer` DISABLE KEYS */;
-INSERT INTO `customer` VALUES ('5b17ec24-eec9-4835-9cc7-f397877eae6a',4,'ece73335-4ad3-418f-8815-13263302cdee',NULL,NULL);
-/*!40000 ALTER TABLE `customer` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `invoice`
@@ -158,15 +128,6 @@ CREATE TABLE `invoice` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `invoice`
---
-
-LOCK TABLES `invoice` WRITE;
-/*!40000 ALTER TABLE `invoice` DISABLE KEYS */;
-/*!40000 ALTER TABLE `invoice` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `membership`
 --
 
@@ -181,16 +142,6 @@ CREATE TABLE `membership` (
   UNIQUE KEY `MID` (`MID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `membership`
---
-
-LOCK TABLES `membership` WRITE;
-/*!40000 ALTER TABLE `membership` DISABLE KEYS */;
-INSERT INTO `membership` VALUES ('ece73335-4ad3-418f-8815-13263302cdee','Standard',0);
-/*!40000 ALTER TABLE `membership` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `reservations`
@@ -214,15 +165,6 @@ CREATE TABLE `reservations` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `reservations`
---
-
-LOCK TABLES `reservations` WRITE;
-/*!40000 ALTER TABLE `reservations` DISABLE KEYS */;
-/*!40000 ALTER TABLE `reservations` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `user`
 --
 
@@ -240,18 +182,9 @@ CREATE TABLE `user` (
   PRIMARY KEY (`ID`),
   UNIQUE KEY `Username` (`Username`),
   UNIQUE KEY `Email` (`Email`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `user`
---
-
-LOCK TABLES `user` WRITE;
-/*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES (3,'TestCustomer','$2a$10$z7W6zUR6KdYt7FQOLAoO2O4D9KoN6So8VgQLxfDh4vCCUNfvR1w3u','test@email.com','1234567890','CUSTOMER','2026-03-22 08:27:53'),(4,'Tester','$2a$10$./LeE1CDwSbeEnjQV5FLLOI39YXYlbUk9q06Pa35Ow71sGlDc7L0y','test@gmail.com','1234567890','CUSTOMER','2026-03-22 09:20:28');
-/*!40000 ALTER TABLE `user` ENABLE KEYS */;
-UNLOCK TABLES;
+SET @@SESSION.SQL_LOG_BIN = @MYSQLDUMP_TEMP_LOG_BIN;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -262,4 +195,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-03-22  3:26:50
+-- Dump completed on 2026-08-05 17:35:04

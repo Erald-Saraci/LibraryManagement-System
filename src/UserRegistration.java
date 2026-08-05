@@ -117,11 +117,10 @@ public class UserRegistration {
                     }
                 }
 
-                String insertAdminSql = "INSERT INTO admin (AID, userID, MasterPassword) VALUES (?, ?, ?)";
+                String insertAdminSql = "INSERT INTO admin (AID, userID) VALUES (?, ?)";
                 try (PreparedStatement adminStmt = conn.prepareStatement(insertAdminSql)) {
                     adminStmt.setString(1, adminId);
                     adminStmt.setInt(2, generatedUserId);
-                    adminStmt.setString(3, BCrypt.hashpw(System.getenv("ADMIN_MASTER_PASSWORD"), BCrypt.gensalt()));
                     adminStmt.executeUpdate();
                 }
 
