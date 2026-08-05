@@ -32,7 +32,10 @@ A full-stack desktop application built with Java and JavaFX, featuring a MySQL d
 DB_URL=jdbc:mysql://localhost:3306/library
 DB_USER=your_mysql_username
 DB_PASSWORD=your_mysql_password
+ADMIN_MASTER_PASSWORD=choose_your_own_value
 ```
+
+For a remote database, use that host in `DB_URL` — e.g. `jdbc:mysql://your-instance.region.rds.amazonaws.com:3306/library`
 
 You can set these in your IDE's run configuration (IntelliJ: **Run → Edit Configurations → Environment variables**) or as system-wide environment variables.
 
@@ -42,7 +45,9 @@ Database credentials are read from the environment — no credentials are stored
 
 ## Administrator Registration
 
-Registering an Administrator account requires a master password configured in the application source. Change it from the default before sharing or deploying the project.
+Registering an Administrator account requires the master password set in the
+`ADMIN_MASTER_PASSWORD` environment variable. Choose your own value — there is
+no default, and admin registration is disabled if the variable is not set.
 
 ## Project Structure
 
