@@ -192,9 +192,7 @@ public class GUI extends Application {
 
                 if (result.isPresent()) {
 
-                    userReg.checkAdminPass(result.get());
-
-                    if (userReg.getPassed()) {
+                    if (userReg.checkAdminPass(result.get())) {
 
                         if (userReg.registerAdmin(regUser.getText(), regPass.getText(), regEmail.getText(), regPhone.getText())) {
                             showAlert("Success", "Admin registered! Please log in.");

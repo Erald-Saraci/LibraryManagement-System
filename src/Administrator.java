@@ -8,7 +8,6 @@ import java.util.UUID;
 
 public class Administrator extends User {
     private String adminID;
-    private String adminPass = System.getenv("ADMIN_MASTER_PASSWORD");
 
     public Administrator() {}
 
@@ -20,7 +19,6 @@ public class Administrator extends User {
 
     // Getters & Setters
     public String getAdminID() { return adminID; }
-    public String getAdminPass() { return adminPass; }
 
     //book methods
 

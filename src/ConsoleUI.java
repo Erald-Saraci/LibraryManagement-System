@@ -91,7 +91,7 @@ public class ConsoleUI {
                             String adminPass = sc.nextLine();
                             user.checkAdminPass(adminPass);
 
-                            if (user.getPassed()) {
+                            if (user.checkAdminPass(adminPass)) {
                                 System.out.println("Enter User Name: ");
                                 String adminName = sc.nextLine();
                                 System.out.println("Enter Password: ");

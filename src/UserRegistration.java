@@ -7,12 +7,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class UserRegistration {
-    private boolean Passed;
 
     public UserRegistration(){}
-
-
-    Administrator admin = new Administrator();
 
 
     public void registerCustomer(String userName, String password, String email, String phoneNumber, String membershipType){
@@ -149,16 +145,21 @@ public class UserRegistration {
         }
     }
 
-    public void checkAdminPass(String adminPass){
-        if(adminPass.equals(admin.getAdminPass())){
-            this.Passed = true;
-        } else {
-            this.Passed = false;
-            System.out.println("Admin Password Mismatch!\n");
+    public boolean checkAdminPass(String adminPass){
+      String pass=System.getenv("ADMIN_MASTER_PASSWORD");
+        if (pass == null || pass.isEmpty()) {
+            System.out.println("ADMIN_MASTER_PASSWORD is not set. Admin registration is disabled.\n");
+            return false;
         }
+
+        if(!pass.equals(adminPass)){
+            System.out.println("Admin password mismatch\n");
+            return false;
+        }
+
+            return true;
+
     }
 
-    public boolean getPassed(){
-        return Passed;
-    }
+
 }
