@@ -124,23 +124,23 @@ public class ConsoleUI {
                         break;
                     }
 
-                    if (logInChoice == 1) {
-                        Connection conn = DatabaseConnector.getConnection();
+                    if (logInChoice == 1 || logInChoice==2) {
                         System.out.println("Enter UserName: ");
                         String userName = sc.nextLine();
                         System.out.println("Enter Password: ");
                         String password = sc.nextLine();
 
-                        LogIn.LogInCustomer(conn, userName, password);
+                        try(Connection conn = DatabaseConnector.getConnection()){
+                            if(logInChoice==1){
+                                LogIn.LogInCustomer(conn, userName, password);
+                            }
+                            else{
+                                LogIn.LogInAdmin(conn, userName,password);
+                            }
+                        } catch (SQLException e) {
+                            System.out.println("Login failed: " + e.getMessage());
+                        }
 
-                    } else if (logInChoice == 2) {
-                        Connection conn = DatabaseConnector.getConnection();
-                        System.out.println("Enter UserName: ");
-                        String userName = sc.nextLine();
-                        System.out.println("Enter Password: ");
-                        String password = sc.nextLine();
-
-                        LogIn.LogInAdmin(conn, userName, password);
                     } else {
                         System.out.println("Already logged in!");
                     }

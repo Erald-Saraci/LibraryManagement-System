@@ -93,13 +93,9 @@ public class GUI extends Application {
                 return;
             }
 
-            Connection conn = DatabaseConnector.getConnection();
-            if (conn == null) {
-                showAlert("Database Error", "Could not connect to MySQL.");
-                return;
-            }
+            try(Connection conn = DatabaseConnector.getConnection()){
 
-            boolean loginSuccess = false;
+            boolean loginSuccess;
             if (roleBox.getValue().equals("Customer")) {
                 loginSuccess = LogIn.LogInCustomer(conn, u, p);
             } else {
@@ -113,7 +109,10 @@ public class GUI extends Application {
             } else {
                 showAlert("Login Failed", "Invalid username or password.");
             }
-        });
+        }
+            catch(SQLException ex){
+                showAlert("Database Error", ex.getMessage());
+            }});
 
         loginTab.setContent(loginGrid);
 
