@@ -347,7 +347,6 @@ public class Customer extends User {
                 System.out.println("Author:      " + rs.getString("Author"));
                 System.out.println("Borrow Date: " + rs.getString("BorrowDate"));
                 System.out.println("Due Date:    " + rs.getString("ReturnDate"));
-                System.out.println("-----");
                 found = true;
             }
             if (!found) System.out.println("You have no books currently borrowed.");
@@ -362,7 +361,7 @@ public class Customer extends User {
     public void cancelReservation(String title) {
         String sql = "UPDATE reservations r JOIN books b ON r.ISBN = b.ISBN " +
                 "SET r.Status = 'Cancelled' " +
-                "WHERE b.Title = ? AND r.CID = ? AND r.Status = 'Pending'";
+                "WHERE b.Title = ? AND r.CID = ? AND r.Status IN ('Pending' , 'Ready')";
 
         try (Connection conn = DatabaseConnector.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
