@@ -174,13 +174,15 @@ public class GUI extends Application {
             if (regType.getValue().equals("Customer")) {
 
 
-                userReg.registerCustomer(regUser.getText(), regPass.getText(), regEmail.getText(), regPhone.getText(), "Standard");
-
-                showAlert("Success", "Customer registered! Please log in.");
-                regUser.clear();
-                regPass.clear();
-                regEmail.clear();
-                regPhone.clear();
+                if (userReg.registerCustomer(regUser.getText(), regPass.getText(), regEmail.getText(), regPhone.getText(), "Standard")) {
+                                        showAlert("Success", "Customer registered! Please log in.");
+                                        regUser.clear();
+                                        regPass.clear();
+                                        regEmail.clear();
+                                        regPhone.clear();
+                                    } else {
+                                        showAlert("Error", "Customer registration failed. Check the console for details.");
+                                    }
             }
             else {
 
