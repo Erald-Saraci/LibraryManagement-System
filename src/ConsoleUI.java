@@ -12,7 +12,6 @@ public class ConsoleUI {
 
         Scanner sc = new Scanner(System.in);
         UserRegistration user = new UserRegistration();
-        Administrator adminConstructor = new Administrator();
         Library library = new Library();
 
 
@@ -207,7 +206,7 @@ public class ConsoleUI {
                     int year = sc.nextInt();
                     sc.nextLine();
 
-                    adminConstructor.addBook(title, author, genre, ISBN, year);
+                    Administrator.addBook(title, author, genre, ISBN, year);
                     break;
                 }
                 //  Borrow book -----------------
@@ -262,7 +261,7 @@ public class ConsoleUI {
                     System.out.println("Enter Book Author: ");
                     String bookAuthor = sc.nextLine();
 
-                    adminConstructor.removeBook(bookTitle, bookAuthor);
+                    Administrator.removeBook(bookTitle, bookAuthor);
                     break;
                 }
                 case 5: {
@@ -608,7 +607,7 @@ public class ConsoleUI {
                         System.out.println("Access Denied: Only Administrators can view all borrowed books.");
                         break;
                     }
-                    adminConstructor.showAllBorrowedBooks();
+                    Administrator.showAllBorrowedBooks();
                     break;
                 }
 

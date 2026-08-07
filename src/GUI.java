@@ -23,7 +23,6 @@ public class GUI extends Application {
     private TextArea consoleOutput;
 
     private UserRegistration userReg = new UserRegistration();
-    private Administrator adminTools = new Administrator();
     private Library library = new Library();
 
     public static void main(String[] args) {
@@ -398,7 +397,7 @@ public class GUI extends Application {
 
             btnFines.setMaxWidth(Double.MAX_VALUE);
 
-            btnFines.setOnAction(e -> adminTools.calculateOverdueFines());
+            btnFines.setOnAction(e -> Administrator.calculateOverdueFines());
 
             buttons.getChildren().add(btnFines);
         }
@@ -409,7 +408,7 @@ public class GUI extends Application {
 
             btnAllBorrowed.setMaxWidth(Double.MAX_VALUE);
 
-            btnAllBorrowed.setOnAction(e -> adminTools.showAllBorrowedBooks());
+            btnAllBorrowed.setOnAction(e -> Administrator.showAllBorrowedBooks());
 
             buttons.getChildren().add(btnAllBorrowed);
         }
@@ -530,7 +529,7 @@ public class GUI extends Application {
 
                         return;
                     }
-                    adminTools.addBook(t1.getText(), t2.getText(), t3.getText(), t4.getText(), year);
+                    Administrator.addBook(t1.getText(), t2.getText(), t3.getText(), t4.getText(), year);
                 } catch (NumberFormatException e) {
 
                     System.out.println("Error: Year must be a number.");
@@ -773,7 +772,7 @@ public class GUI extends Application {
             ad.setHeaderText("Author:");
 
             ad.showAndWait().ifPresent(author -> {
-                adminTools.removeBook(title, author);
+                Administrator.removeBook(title, author);
             });
         });
     }
@@ -982,14 +981,14 @@ public class GUI extends Application {
 
                     switch (type.getValue()) {
 
-                        case "Title": adminTools.updateBookTitle(tTitle.getText(), tAuthor.getText(), val); break;
+                        case "Title": Administrator.updateBookTitle(tTitle.getText(), tAuthor.getText(), val); break;
 
-                        case "Author": adminTools.updateBookAuthor(tTitle.getText(), tAuthor.getText(), val); break;
+                        case "Author": Administrator.updateBookAuthor(tTitle.getText(), tAuthor.getText(), val); break;
 
-                        case "Genre": adminTools.updateBookGenre(tTitle.getText(), tAuthor.getText(), val); break;
+                        case "Genre": Administrator.updateBookGenre(tTitle.getText(), tAuthor.getText(), val); break;
 
                         case "Year":
-                            adminTools.updateBookYear(tTitle.getText(), tAuthor.getText(), Integer.parseInt(val));
+                            Administrator.updateBookYear(tTitle.getText(), tAuthor.getText(), Integer.parseInt(val));
                             break;
                         case "Availability":
                             if (!val.equalsIgnoreCase("true") && !val.equalsIgnoreCase("false")) {
@@ -999,7 +998,7 @@ public class GUI extends Application {
                             }
                             else {
 
-                                adminTools.updateBookAvailability(tTitle.getText(), tAuthor.getText(), Boolean.parseBoolean(val));
+                                Administrator.updateBookAvailability(tTitle.getText(), tAuthor.getText(), Boolean.parseBoolean(val));
 
                             }
                             break;
@@ -1060,7 +1059,7 @@ public class GUI extends Application {
                     }
 
 
-                    adminTools.generateInvoice(tUser.getText(), amount);
+                    Administrator.generateInvoice(tUser.getText(), amount);
 
                 } catch (NumberFormatException e) {
 

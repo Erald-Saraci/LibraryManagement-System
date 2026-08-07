@@ -22,7 +22,7 @@ public class Administrator extends User {
 
     //book methods
 
-    public void addBook(String title, String author, String genre, String ISBN, int year) {
+    public static void addBook(String title, String author, String genre, String ISBN, int year) {
         String checkSql = "SELECT COUNT(*) FROM books WHERE ISBN = ?";
         String insertSql = "INSERT INTO books (ISBN, Title, Author, Genre, PublishYear, Availability) VALUES (?, ?, ?, ?, ?, true)";
 
@@ -53,7 +53,7 @@ public class Administrator extends User {
         }
     }
 
-    public void removeBook(String title, String author) {
+    public static void removeBook(String title, String author) {
         String sql = "DELETE FROM books WHERE Title = ? AND Author = ?";
 
         try (Connection conn = DatabaseConnector.getConnection();
@@ -75,19 +75,19 @@ public class Administrator extends User {
         }
     }
 
-    public void updateBookTitle(String currentTitle, String author, String newTitle) {
+    public static void updateBookTitle(String currentTitle, String author, String newTitle) {
         updateField("Title", newTitle, currentTitle, author);
     }
 
-    public void updateBookAuthor(String title, String currentAuthor, String newAuthor) {
+    public static void updateBookAuthor(String title, String currentAuthor, String newAuthor) {
         updateField("Author", newAuthor, title, currentAuthor);
     }
 
-    public void updateBookGenre(String title, String author, String newGenre) {
+    public static void updateBookGenre(String title, String author, String newGenre) {
         updateField("Genre", newGenre, title, author);
     }
 
-    public void updateBookYear(String title, String author, int newYear) {
+    public static void updateBookYear(String title, String author, int newYear) {
         String sql = "UPDATE books SET PublishYear = ? WHERE Title = ? AND Author = ?";
         try (Connection conn = DatabaseConnector.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -102,7 +102,7 @@ public class Administrator extends User {
         }
     }
 
-    public void updateBookAvailability(String title, String author, boolean newStatus) {
+    public static void updateBookAvailability(String title, String author, boolean newStatus) {
         String sql = "UPDATE books SET Availability = ? WHERE Title = ? AND Author = ?";
         try (Connection conn = DatabaseConnector.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -117,7 +117,7 @@ public class Administrator extends User {
         }
     }
 
-    private void updateField(String field, String newValue, String title, String author) {
+    private static void updateField(String field, String newValue, String title, String author) {
         String sql = "UPDATE books SET " + field + " = ? WHERE Title = ? AND Author = ?";
         try (Connection conn = DatabaseConnector.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -132,9 +132,8 @@ public class Administrator extends User {
         }
     }
 
-    //Fines
 
-    public void calculateOverdueFines() {
+    public static void calculateOverdueFines() {
         double finePerDay = 0.50;
         boolean foundOverdue = false;
         LocalDate today = LocalDate.now();
@@ -180,9 +179,8 @@ public class Administrator extends User {
         }
     }
 
-    //Invoice
 
-    public void generateInvoice(String customerName, double amount) {
+    public static void generateInvoice(String customerName, double amount) {
         String checkAdminSql = "SELECT COUNT(*) FROM user u JOIN admin a ON u.ID = a.userID WHERE u.Username = ?";
         String checkCustSql  = "SELECT c.CID FROM user u JOIN customer c ON u.ID = c.userID WHERE u.Username = ?";
         String insertSql     = "INSERT INTO invoice (InID, Date, Amount, AID, CID) VALUES (?, ?, ?, ?, ?)";
@@ -247,7 +245,7 @@ public class Administrator extends User {
         }
     }
 
-    public void showAllBorrowedBooks() {
+    public static void showAllBorrowedBooks() {
         String sql = "SELECT u.Username, b.Title, b.Author, br.BorrowDate, br.ReturnDate " +
                 "FROM borrowed br " +
                 "JOIN customer c ON br.CID = c.CID " +
