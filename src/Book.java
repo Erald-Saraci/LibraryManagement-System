@@ -8,7 +8,7 @@ public class Book{
 
     //Constructors--------------
 
-    public Book(String title, String author, String genre, String ISBN, int publicationYear, boolean available){ //Constructor for adding
+    public Book(String title, String author, String genre, String ISBN, int publicationYear, boolean available){
         this.title = title;
         this.author = author;
         this.genre = genre;

@@ -52,6 +52,8 @@ public class UserRegistration {
                     ResultSet generatedKeys = userStmt.getGeneratedKeys();
                     if (generatedKeys.next()) {
                         generatedUserId = generatedKeys.getInt(1);
+                    }else {
+                        throw new SQLException("User insert did not return a generated ID.");
                     }
                 }
 
@@ -131,6 +133,8 @@ public class UserRegistration {
                     ResultSet generatedKeys = userStmt.getGeneratedKeys();
                     if (generatedKeys.next()) {
                         generatedUserId = generatedKeys.getInt(1);
+                    }else {
+                        throw new SQLException("User insert did not return a generated ID.");
                     }
                 }
 
