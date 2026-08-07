@@ -185,7 +185,7 @@ public class Administrator extends User {
     public void generateInvoice(String customerName, double amount) {
         String checkAdminSql = "SELECT COUNT(*) FROM user u JOIN admin a ON u.ID = a.userID WHERE u.Username = ?";
         String checkCustSql  = "SELECT c.CID FROM user u JOIN customer c ON u.ID = c.userID WHERE u.Username = ?";
-        String insertSql     = "INSERT INTO invoice (InvID, Date, Amount, AID, CID) VALUES (?, ?, ?, ?, ?)";
+        String insertSql     = "INSERT INTO invoice (InID, Date, Amount, AID, CID) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseConnector.getConnection()) {
 
@@ -216,11 +216,17 @@ public class Administrator extends User {
             String invoiceID = "INV-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
             String issuerName = (Main.currentUser != null) ? Main.currentUser.getUserName() : "Unknown";
 
+            if (!(Main.currentUser instanceof Administrator)) {
+                                System.out.println("Error: only a logged-in administrator can issue an invoice.");
+                                return;
+            }
+            String issuerAID = ((Administrator) Main.currentUser).getAdminID();
+
             try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
                 insertStmt.setString(1, invoiceID);
                 insertStmt.setDate(2, Date.valueOf(LocalDate.now()));
                 insertStmt.setDouble(3, amount);
-                insertStmt.setString(4, this.adminID);
+                insertStmt.setString(4, issuerAID);
                 insertStmt.setString(5, customerCID);
                 insertStmt.executeUpdate();
             }
@@ -228,13 +234,12 @@ public class Administrator extends User {
             System.out.println("========= LIBRARY INVOICE =========");
             System.out.println("Invoice ID:   " + invoiceID);
             System.out.println("Date:         " + LocalDate.now());
-            System.out.println("Issued By:    " + issuerName + " (Admin)");
+            System.out.println("Issued By:    " + issuerName );
             System.out.println("-----------------------------------");
             System.out.println("Bill To:      " + customerName);
             System.out.println("Description:  Subscription Payment");
             System.out.println("-----------------------------------");
             System.out.printf("TOTAL AMOUNT: $%.2f%n", amount);
-            System.out.println(">> Invoice saved to database.");
 
         } catch (SQLException e) {
             System.out.println("Database error generating invoice.");
@@ -262,7 +267,6 @@ public class Administrator extends User {
                 System.out.println("Author:      " + rs.getString("Author"));
                 System.out.println("Borrow Date: " + rs.getString("BorrowDate"));
                 System.out.println("Due Date:    " + rs.getString("ReturnDate"));
-                System.out.println("-----");
                 found = true;
             }
             if (!found) System.out.println("No books are currently borrowed.");

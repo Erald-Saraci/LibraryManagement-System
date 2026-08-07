@@ -679,7 +679,6 @@ public class GUI extends Application {
                 System.out.println("Reserved: " + rs.getString("ReservedDate"));
                 System.out.println("Status:   " + status +
                         (status.equals("Pending") ? " (Queue position: " + position + ")" : " — You can borrow this now!"));
-                System.out.println("-----");
                 found = true;
             }
             if (!found) System.out.println("You have no active reservations.");

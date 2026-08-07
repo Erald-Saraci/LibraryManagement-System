@@ -387,7 +387,6 @@ public class Customer extends User {
 
         try (Connection conn = DatabaseConnector.getConnection()) {
 
-            // Verify old password first
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setString(1, this.customerID);
                 ResultSet rs = pstmt.executeQuery();
